@@ -29,7 +29,8 @@
     <script>
       // Fix me
 var canvas = document.getElementById('c');
-var host = window.location.host;
+// var host = window.location.host;
+var host = "192.168.1.76:8000";//Host for my dev servert
 var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
@@ -125,6 +126,9 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    var msgData = {};
+    msgData[entity] = data;
+    socket.send(JSON.stringify(msgData));
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -250,10 +254,12 @@ function update() {
 
 
 function wsSetup() {
-    var url = "ws://"+host+"/subscribe";   
+    var url = "ws://"+host+"/subscribe";  
+    console.log("Server ws host:  " + url)
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
+
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -261,7 +267,13 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?
+            let msgData = JSON.parse(msg.data);
+            for (let entity in msgData){
+                world[entity] = msgData[entity];
+            }
+            drawNextFrame();//new content waiting to be drawn
+
         } catch (e) {
             alert("socket on message: " + e);
         }

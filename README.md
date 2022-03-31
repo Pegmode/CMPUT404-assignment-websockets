@@ -59,3 +59,8 @@ Contributors
 * Mark Galloway
 * Abram Hindle
 * Cole Mackenzie
+
+External References
+============
+External source code was taken from these places:
+- [Examples given in eclass from prof](https://github.com/abramhindle/WebSocketsExamples) 
