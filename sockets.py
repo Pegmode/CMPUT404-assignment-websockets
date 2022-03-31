@@ -87,6 +87,7 @@ myWorld = World()
 
 def set_listener( entity, data ):
     ''' do something with the update ! '''
+    #not going to bother with the world listener since I can already send to all clients elsewhere
 
 myWorld.add_set_listener( set_listener )
         
@@ -102,16 +103,19 @@ def send_all(msg):# from https://github.com/abramhindle/WebSocketsExamples/blob/
 def send_all_json(obj):# fromhttps://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
     send_all( json.dumps(obj) )
 
-def read_ws(ws,client):# from https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
+def read_ws(ws,client):# based on https://github.com/abramhindle/WebSocketsExamples/blob/master/chat.py
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
     try:
         while True:
             msg = ws.receive()
-            print(f"WS RECV: {msg}")
+            #print(f"WS RECV: {msg}")
             if (msg is not None):
                 packet = json.loads(msg)
                 send_all_json( packet )
+                for entity, data in packet.items():
+                    for k, v in data.items():
+                        myWorld.update(entity, k, v)
             else:
                 break
     except:

@@ -64,3 +64,4 @@ External References
 ============
 External source code was taken from these places:
 - [Examples given in eclass from prof](https://github.com/abramhindle/WebSocketsExamples) 
+- [js heavily based on my last assignment implementation](https://github.com/Pegmode/CMPUT404-assignment-ajax/blob/master/static/index.html)

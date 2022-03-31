@@ -45,9 +45,30 @@ debug("Test");
 
 world = {};
 
+penStrokeColor = "green";
+startStrokeColor = "blue";
+endStrokeColor = "red";
+userID = Math.floor(Math.random() * 0xFFFF);//I would prefer to use a UUID but I don't want to include any libs. Lets just hope theres no collisions with this bad implementation
+userColor = getRandomColor();
+maxEntities = 3000//max dots per user
+
+//random color for my user
+function getRandomColor(){//pick from a list so that we ensure the contrast is good for all colors
+    var userColorList = ["#eb4034", "#eba134", "#74eb34", "#34ebcf", "#9e34eb","#eb34e5","#ffbd87", "#fff387","#d5ff87","#87ff99","#87fdff","#87bdff","#f587ff"];
+    return userColorList[Math.floor(Math.random() * userColorList.length)];
+}
+
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
+        if(entity["type"] == "cursor"){
+            var x = entity["x"];
+            var y = entity["y"];
+            font = "20px Arial";
+            fillStyle = "white";
+            var cursorUser = entity["user"];
+            fillText(`user:${cursorUser}`,x,y);
+        }
         beginPath();                
         lineWidth = 3;
         var x = entity["x"];
@@ -132,7 +153,7 @@ function addEntity(entity, data) {
 }
 var counter = 0;
 function addEntityWithoutName(data) {
-    var name = "X"+(counter++)%100;
+    var name = userID+"X"+(counter++)%maxEntities;
     addEntity(name,data);
 }
 
@@ -235,16 +256,25 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    //addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({"x":x, "y":y, "colour":startStrokeColor,
+                          'radius':2})
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    //addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour': endStrokeColor,
+                          'radius':2});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':userColor,
+                          'radius':2});
+});
+
+mouse.mousemovers.push(function(x,y,clicked,e) {
+    addEntity(`Cursor${userID}`,{'x':x,'y':y,'colour':"white", "radius":2, "type": "cursor", "user":userID});//cursor to show where a persons pen is
+
 });
 
 
@@ -253,13 +283,24 @@ function update() {
 }
 
 
+
 function wsSetup() {
     var url = "ws://"+host+"/subscribe";  
     console.log("Server ws host:  " + url)
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
-
+        //ask for world
+        var url = "http://"+host+"/world";
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                //createWorld(xhr.response);
+                world = JSON.parse(xhr.responseText);
+            }
+        }
+        xhr.open("GET",url);
+        xhr.send();
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
